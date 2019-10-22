@@ -27,7 +27,7 @@ function templatesHTML(title, list, body){
     </body>
     </html>
     `
-}
+};
 
 function listMaker(files){
     let list = '<ul>'; 
