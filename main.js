@@ -27,7 +27,7 @@ function templatesHTML(title, list, body){
     </body>
     </html>
     `
-};
+}
 
 function listMaker(files){
     let list = '<ul>'; 
@@ -81,7 +81,7 @@ const app = http.createServer(function(request,response){
     if(pathname === '/'){
         if(querydata.id === undefined){ // Home일때(pathname 이 / 하나만 있을 때)
             console.log("THis is Home");
-            fs.readdir('./text', (err, files) => {
+            fs.readdir('./files', (err, files) => {
                 let title = "Welcome";
                 let list = listMaker(files);
                 let desc = "Hello, World";
@@ -96,8 +96,8 @@ const app = http.createServer(function(request,response){
                 response.end(templates);
             })
         } else {
-            fs.readdir('./text', (err, files) => { // pathname이 / 하나이면서, 홈이 아닐 때(querydata.id값이 있을 떄)
-                fs.readFile(`text/${querydata.id}`,'utf8',(err,desc) => {
+            fs.readdir('./files', (err, files) => { // pathname이 / 하나이면서, 홈이 아닐 때(querydata.id값이 있을 떄)
+                fs.readFile(`./files/${querydata.id}`,'utf8',(err,desc) => {
                     // console.log(files);
                     let title = querydata.id;
                     let list = listMaker(files);
@@ -114,7 +114,7 @@ const app = http.createServer(function(request,response){
             });
         }
     } else if (pathname === "/create"){ // 글 생성 폼이 있는 곳의 URL
-        fs.readdir('./text', (err, files) => {
+        fs.readdir('./files', (err, files) => {
             // console.log(files);
             let title = "Web - create";
             let list = listMaker(files);
@@ -146,11 +146,12 @@ const app = http.createServer(function(request,response){
             const post = qs.parse(body);
             const title = post.title;
             const desc = post.description
-            console.log(`${JSON.stringify(post)}`)
-            console.log(`${title}, ${desc}`)
+            fs.writeFile(`./files/${title}`,desc,(err) => {
+                if(err) throw error;
+                response.writeHead(200);
+                response.end('success');
+            })
         });
-        response.writeHead(200);
-        response.end('success');
     }else {
         response.writeHead(404);
         response.end('Not Found');
