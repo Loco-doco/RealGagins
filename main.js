@@ -23,19 +23,17 @@ function templatesHTML(title, list, body){
         <h1><a href="/">WEB2</a></h1>
         ${list}
         <a href = "/create">create</a>
+        <a href = "/update">update</a>
         ${body}
     </body>
     </html>
     `
 }
 
-function listMaker(files){
+function listMaker(files){ 
     let list = '<ul>'; 
     files.forEach((file) => {
-        // console.log(`파일(file) = ${file}`)
         list += `<li><a href = "/?id=${file}">${file}</a></li>`
-        // console.log(`리스트(list) = ${list}`)
-        console.log("\n")
     })
     list += '</ul>'
 
@@ -72,8 +70,6 @@ const app = http.createServer(function(request,response){
     // console.log(`querydata = parsedUrl.query = ${JSON.stringify(querydata)}`);
 
     // pathname = parsedUrl에서 key 값이 pathname인 것.
-    // querystring이면 pathname은 슬래시 하나밖에 없음
-    // querystring이 아니면 pathname은 그대로 나옴
     let pathname = parsedUrl.pathname;
     console.log(`pathname = ${pathname}`);
 
@@ -81,9 +77,9 @@ const app = http.createServer(function(request,response){
     if(pathname === '/'){
         if(querydata.id === undefined){ // Home일때(pathname 이 / 하나만 있을 때)
             console.log("THis is Home");
-            fs.readdir('./files', (err, files) => {
+            fs.readdir('./files', (err, files) => {// array : files 디렉토리 안의 파일명들
                 let title = "Welcome";
-                let list = listMaker(files);
+                let list = listMaker(files);// listmaker 함수 안에 files라는 array를 집어넣음
                 let desc = "Hello, World";
 
                 let templates = templatesHTML(
@@ -95,12 +91,11 @@ const app = http.createServer(function(request,response){
                 response.writeHead(200);
                 response.end(templates);
             })
-        } else {
-            fs.readdir('./files', (err, files) => { // pathname이 / 하나이면서, 홈이 아닐 때(querydata.id값이 있을 떄)
+        } else { // pathname이 / 하나이면서, 홈이 아닐 때(=querydata.id값이 있을 떄)
+            fs.readdir('./files', (err, files) => { 
                 fs.readFile(`./files/${querydata.id}`,'utf8',(err,desc) => {
-                    // console.log(files);
                     let title = querydata.id;
-                    let list = listMaker(files);
+                    let list = listMaker(files) 
                     let templates = templatesHTML(
                         title,
                         list,
@@ -115,11 +110,10 @@ const app = http.createServer(function(request,response){
         }
     } else if (pathname === "/create"){ // 글 생성 폼이 있는 곳의 URL
         fs.readdir('./files', (err, files) => {
-            // console.log(files);
             let title = "Web - create";
             let list = listMaker(files);
 
-            let templates = templatesHTML(
+            let templates = templatesHTML( // create_process URL로 데이터를 넘긴다.
                 title,
                 list,
                 `<h2>${title}</h2>
@@ -139,17 +133,21 @@ const app = http.createServer(function(request,response){
         })
     } else if(pathname === '/create_process'){ // 제출 버튼으로 전송된 post데이터 열람 URL
         let body = '';
-        request.on('data', function(data){
+        request.on('data', function(data){ // 데이터를 받아옴
             body += data;
         });
         request.on('end', function(){
-            const post = qs.parse(body);
-            const title = post.title;
-            const desc = post.description
-            fs.writeFile(`./files/${title}`,desc,(err) => {
-                if(err) throw error;
-                response.writeHead(200);
-                response.end('success');
+            const post = qs.parse(body); // body에 있는 데이터들을 파싱 = object
+            const title = post.title; // 여기서의 title은 post object의 key 값 이름
+            const desc = post.desc // 이하 동문
+            fs.writeFile(
+                `./files/${title}`, // param1 : files 디렉토리 안에 title 변수로 된 파일 생성
+                desc, // param2 : 파일에 들어갈 내용
+                (err) => { // param3 : 에러 콜백 함수
+                    if(err) throw error;
+                    response.writeHead(302,
+                        {Location : `/?id=${title}`}); // 302 코드로 redirection 보냄.
+                    response.end();
             })
         });
     }else {
