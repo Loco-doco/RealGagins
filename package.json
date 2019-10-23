@@ -1,22 +1,28 @@
 {
-  "name": "learn_node",
+  "name": "nodejs_mysql",
   "version": "1.0.0",
-  "description": "ThisIsMyFirstNodeTest",
+  "description": "myFirstNodeMySql",
   "main": "main.js",
+  "directories": {
+    "lib": "lib"
+  },
   "scripts": {
-    "test": "console.log(\"Hello, World\")"
+    "test": "dude"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Loco-doco/RealGagins.git"
   },
   "keywords": [
-    "CherryBullet"
+    "none"
   ],
-  "author": "Kenny",
+  "author": "kenny",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/Loco-doco/RealGagins/issues"
   },
-  "homepage": "https://github.com/Loco-doco/RealGagins#readme"
+  "homepage": "https://github.com/Loco-doco/RealGagins#readme",
+  "dependencies": {
+    "sanitize-html": "^1.20.1"
+  }
 }

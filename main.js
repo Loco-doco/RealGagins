@@ -4,29 +4,35 @@ var url = require('url');
 var qs = require('querystring');
 var template = require('./lib/template.js');
 var path = require('path');
-// var sanitizeHtml = require('sanitize-html');
+var sanitizeHtml = require('sanitize-html');
 
 var app = http.createServer(function(request,response){
+console.log(`----------------------시이이자아아아악----------------------`);
     var _url = request.url;
+    console.log(`받은 url은 ${_url} 입니다.`)
     var queryData = url.parse(_url, true).query;
     var pathname = url.parse(_url, true).pathname;
+    console.log(`pathname 은 ${pathname}입니다.`)
     if(pathname === '/'){
       if(queryData.id === undefined){
         fs.readdir('./data', function(error, filelist){
+          console.log(`home 화면의 로직 수행중입니다`);
           var title = 'Welcome';
           var description = 'Hello, Node.js';
           var list = template.list(filelist);
-          console.log(`main.js / list = ${list}`);
           var html = template.HTML(title, list,
             `<h2>${title}</h2>${description}`,
             `<a href="/create">create</a>`
           );
           response.writeHead(200);
           response.end(html);
+          console.log(`home 화면의 로직이 끝났습니다`);
         });
       } else {
         fs.readdir('./data', function(error, filelist){
           var filteredId = path.parse(queryData.id).base;
+          console.log(`filtered ID 는 ${filteredId} 입니다`);
+          console.log(`이제 data 안에 있는 ${filteredId} 파일을 읽을 겁니다`);
           fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
             var title = queryData.id;
             var sanitizedTitle = sanitizeHtml(title);
@@ -45,11 +51,13 @@ var app = http.createServer(function(request,response){
             );
             response.writeHead(200);
             response.end(html);
+            console.log(`${filteredId} 파일을 다 읽었습니다.`)
           });
         });
       }
     } else if(pathname === '/create'){
       fs.readdir('./data', function(error, filelist){
+        console.log(`/create 화면으로 들어갑니다`);
         var title = 'WEB - create';
         var list = template.list(filelist);
         var html = template.HTML(title, list, `
@@ -65,8 +73,10 @@ var app = http.createServer(function(request,response){
         `, '');
         response.writeHead(200);
         response.end(html);
+        console.log(`/create 화면에서 나옵니다`);
       });
     } else if(pathname === '/create_process'){
+      console.log(`/create_process 를 거치는 중입니다.`)
       var body = '';
       request.on('data', function(data){
           body = body + data;
@@ -75,14 +85,19 @@ var app = http.createServer(function(request,response){
           var post = qs.parse(body);
           var title = post.title;
           var description = post.description;
+          console.log(`${title}라는 이름의 파일을 생성할 예정입니다.`)
           fs.writeFile(`data/${title}`, description, 'utf8', function(err){
+            console.log(`"/?id=${title} 이라는 이름의 경로로 보내버립니다.`)
             response.writeHead(302, {Location: `/?id=${title}`});
             response.end();
           })
+          console.log(`${title}라는 이름의 파일을 생성했습니다.`)
       });
     } else if(pathname === '/update'){
+      console.log(`update URL로 들어갑니다`)
       fs.readdir('./data', function(error, filelist){
         var filteredId = path.parse(queryData.id).base;
+        console.log(`${filteredId}라는 filteredId변수를 만들었습니다.`)
         fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
           var title = queryData.id;
           var list = template.list(filelist);
@@ -106,6 +121,7 @@ var app = http.createServer(function(request,response){
         });
       });
     } else if(pathname === '/update_process'){
+      console.log(`update process 진행중입니다.`)
       var body = '';
       request.on('data', function(data){
           body = body + data;
@@ -115,8 +131,11 @@ var app = http.createServer(function(request,response){
           var id = post.id;
           var title = post.title;
           var description = post.description;
+          console.log(`파일 이름을 ${id}에서 ${title}로 바꾸고 있습니다.`)
           fs.rename(`data/${id}`, `data/${title}`, function(error){
+            console.log(`${title}이름의 파일을 만들고 있습니다`)
             fs.writeFile(`data/${title}`, description, 'utf8', function(err){
+              console.log(`"/?id=${title}" 주소로 보내버립니다.`)
               response.writeHead(302, {Location: `/?id=${title}`});
               response.end();
             })
