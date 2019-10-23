@@ -1,0 +1,22 @@
+{
+  "name": "learn_node",
+  "version": "1.0.0",
+  "description": "ThisIsMyFirstNodeTest",
+  "main": "main.js",
+  "scripts": {
+    "test": "console.log(\"Hello, World\")"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Loco-doco/RealGagins.git"
+  },
+  "keywords": [
+    "CherryBullet"
+  ],
+  "author": "Kenny",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Loco-doco/RealGagins/issues"
+  },
+  "homepage": "https://github.com/Loco-doco/RealGagins#readme"
+}
