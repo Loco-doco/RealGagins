@@ -4,7 +4,7 @@ var url = require('url');
 var qs = require('querystring');
 var template = require('./lib/template.js');
 var path = require('path');
-var sanitizeHtml = require('sanitize-html');
+// var sanitizeHtml = require('sanitize-html');
 
 var app = http.createServer(function(request,response){
     var _url = request.url;
@@ -16,6 +16,7 @@ var app = http.createServer(function(request,response){
           var title = 'Welcome';
           var description = 'Hello, Node.js';
           var list = template.list(filelist);
+          console.log(`main.js / list = ${list}`);
           var html = template.HTML(title, list,
             `<h2>${title}</h2>${description}`,
             `<a href="/create">create</a>`
