@@ -5,6 +5,15 @@ const qs = require('querystring');
 const template = require('./lib/template.js');
 const path = require('path');
 const sanitizeHtml = require('sanitize-html');
+const mysql = require('mysql');
+const db = mysql.createConnection({
+    host : 'localhost',
+    user : 'root',
+    password : '123123',
+    database : 'nodeTest'
+});
+db.connect();
+
 
 const app = http.createServer(function(request,response){
 console.log(`----------------------시이이자아아아악----------------------`);
@@ -17,18 +26,24 @@ console.log(`----------------------시이이자아아아악---------------------
     console.log(`pathname 은 ${pathname}입니다.`)
     if(pathname === '/'){
       if(queryData.id === undefined){
-        fs.readdir('./data', function(error, filelist){
-          console.log(`home 화면의 로직 수행중입니다`);
-          let title = 'Welcome';
-          let description = 'Hello, Node.js';
-          let list = template.list(filelist);
-          let html = template.HTML(title, list,
-            `<h2>${title}</h2>${description}`,
-            `<a href="/create">create</a>`
-          );
+        // fs.readdir('./data', function(error, filelist){
+        //   console.log(`home 화면의 로직 수행중입니다`);
+        //   let title = 'Welcome';
+        //   let description = 'Hello, Node.js';
+        //   let list = template.list(filelist);
+        //   let html = template.HTML(title, list,
+        //     `<h2>${title}</h2>${description}`,
+        //     `<a href="/create">create</a>`
+        //   );
+        //   response.writeHead(200);
+        //   response.end(html);
+        //   console.log(`home 화면의 로직이 끝났습니다`);
+        // });
+        db.query(`SELECT * FROM author`, (err,result) => {
+          console.log('success');
+          console.log(result);
           response.writeHead(200);
-          response.end(html);
-          console.log(`home 화면의 로직이 끝났습니다`);
+          response.end('Success');
         });
       } else {
         fs.readdir('./data', function(error, filelist){
