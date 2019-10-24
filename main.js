@@ -39,16 +39,12 @@ console.log(`----------------------시이이자아아아악---------------------
           response.end(html);
         });
       } else {
-        fs.readdir('./data', function(error, filelist){
-          const filteredId = path.parse(queryData.id).base;
-          console.log(`filtered ID 는 ${filteredId} 입니다`);
-          console.log(`이제 data 안에 있는 ${filteredId} 파일을 읽을 겁니다`);
-          fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
-            let title = queryData.id;
-            console.log(`title은 ${title} 입니다.`);
+        db.query(`SELECT * FROM topic`, (err,filelist) => {
+          db.query(`SELECT id,title,description FROM topic WHERE id=${queryData.id}`,(err, result) => {
+            console.log(result);
+            let title = result[0].title;
             let sanitizedTitle = sanitizeHtml(title);
-            console.log(`sanitizedTitle 은 ${sanitizedTitle}입니다`);
-            let sanitizedDescription = sanitizeHtml(description, {
+            let sanitizedDescription = sanitizeHtml(result[0].description, {
               allowedTags:['h1']
             });
             let list = template.list(filelist);
@@ -61,11 +57,38 @@ console.log(`----------------------시이이자아아아악---------------------
                   <input type="submit" value="delete">
                 </form>`
             );
+            // console.log(result);
             response.writeHead(200);
             response.end(html);
-            console.log(`${filteredId} 파일을 다 읽었습니다.`)
-          });
+          })
         });
+        // fs.readdir('./data', function(error, filelist){
+        //   const filteredId = path.parse(queryData.id).base;
+        //   console.log(`filtered ID 는 ${filteredId} 입니다`);
+        //   console.log(`이제 data 안에 있는 ${filteredId} 파일을 읽을 겁니다`);
+        //   fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
+        //     let title = queryData.id;
+        //     console.log(`title은 ${title} 입니다.`);
+        //     let sanitizedTitle = sanitizeHtml(title);
+        //     console.log(`sanitizedTitle 은 ${sanitizedTitle}입니다`);
+        //     let sanitizedDescription = sanitizeHtml(description, {
+        //       allowedTags:['h1']
+        //     });
+        //     let list = template.list(filelist);
+        //     let html = template.HTML(sanitizedTitle, list,
+        //       `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
+        //       ` <a href="/create">create</a>
+        //         <a href="/update?id=${sanitizedTitle}">update</a>
+        //         <form action="delete_process" method="post">
+        //           <input type="hidden" name="id" value="${sanitizedTitle}">
+        //           <input type="submit" value="delete">
+        //         </form>`
+        //     );
+        //     response.writeHead(200);
+        //     response.end(html);
+        //     console.log(`${filteredId} 파일을 다 읽었습니다.`)
+        //   });
+        // });
       }
     } else if(pathname === '/create'){
       fs.readdir('./data', function(error, filelist){
