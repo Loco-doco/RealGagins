@@ -2,8 +2,8 @@ const mysql = require('mysql');
 const connection = mysql.createConnection({
     host : 'localhost',
     user : 'root',
-    pasword : '12345',
-    database : 'nodeTest'
+    password : '123123'
+    // database : 'nodeTest'
 });
 
 connection.connect(
@@ -13,13 +13,13 @@ connection.connect(
     }
 );
 
-// connection.query(
-//     'SELECT * FROM topic;',
-//     (error, result, fields) => {
-//         if(error){
-//             console.log(error);
-//         }
-//         console.log(result);
-//     }
-// )
+connection.query(
+    'SELECT * FROM mysql.user;',
+    (error, result, fields) => {
+        if(error){
+            console.log(error);
+        }
+        console.log(result);
+    }
+)
 connection.end();
