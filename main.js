@@ -24,6 +24,7 @@ console.log(`----------------------시이이자아아아악---------------------
     console.log(`querydata.id 는 ${queryData.id} 입니다.`)
     const pathname = url.parse(_url, true).pathname;
     console.log(`pathname 은 ${pathname}입니다.`)
+
     if(pathname === '/'){
       if(queryData.id === undefined){
         db.query(`SELECT * FROM topic`, (err,result) => {
@@ -40,148 +41,131 @@ console.log(`----------------------시이이자아아아악---------------------
         });
       } else {
         db.query(`SELECT * FROM topic`, (err,filelist) => {
-          db.query(`SELECT id,title,description FROM topic WHERE id=${queryData.id}`,(err, result) => {
-            console.log(result);
-            let title = result[0].title;
-            let sanitizedTitle = sanitizeHtml(title);
-            let sanitizedDescription = sanitizeHtml(result[0].description, {
-              allowedTags:['h1']
-            });
-            let list = template.list(filelist);
-            let html = template.HTML(sanitizedTitle, list,
-              `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
-              ` <a href="/create">create</a>
-                <a href="/update?id=${sanitizedTitle}">update</a>
-                <form action="delete_process" method="post">
-                  <input type="hidden" name="id" value="${sanitizedTitle}">
-                  <input type="submit" value="delete">
-                </form>`
-            );
-            // console.log(result);
-            response.writeHead(200);
-            response.end(html);
-          })
+          if (err) throw err;
+          db.query(`
+            SELECT id,title,description FROM topic WHERE id=?`,
+            [queryData.id],
+            (err, result) => {
+              if (err) throw err;
+
+              console.log(result);
+              let title = result[0].title; // result 배열의 첫번째 객체의 title 프로퍼티
+              let description = result[0].description;
+              let list = template.list(filelist);
+              let html = template.HTML(title, list,
+                `<h2>${title}</h2>${description}`,
+                ` <a href="/create">create</a>
+                  <a href="/update?id=${queryData.id}">update</a>
+                  <form action="delete_process" method="post">
+                    <input type="hidden" name="id" value="${queryData.id}">
+                    <input type="submit" value="delete">
+                  </form>`
+              );
+              // console.log(result);
+              response.writeHead(200);
+              response.end(html);
+            }
+          )
         });
-        // fs.readdir('./data', function(error, filelist){
-        //   const filteredId = path.parse(queryData.id).base;
-        //   console.log(`filtered ID 는 ${filteredId} 입니다`);
-        //   console.log(`이제 data 안에 있는 ${filteredId} 파일을 읽을 겁니다`);
-        //   fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
-        //     let title = queryData.id;
-        //     console.log(`title은 ${title} 입니다.`);
-        //     let sanitizedTitle = sanitizeHtml(title);
-        //     console.log(`sanitizedTitle 은 ${sanitizedTitle}입니다`);
-        //     let sanitizedDescription = sanitizeHtml(description, {
-        //       allowedTags:['h1']
-        //     });
-        //     let list = template.list(filelist);
-        //     let html = template.HTML(sanitizedTitle, list,
-        //       `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
-        //       ` <a href="/create">create</a>
-        //         <a href="/update?id=${sanitizedTitle}">update</a>
-        //         <form action="delete_process" method="post">
-        //           <input type="hidden" name="id" value="${sanitizedTitle}">
-        //           <input type="submit" value="delete">
-        //         </form>`
-        //     );
-        //     response.writeHead(200);
-        //     response.end(html);
-        //     console.log(`${filteredId} 파일을 다 읽었습니다.`)
-        //   });
-        // });
       }
     } else if(pathname === '/create'){
-      fs.readdir('./data', function(error, filelist){
-        console.log(`/create 화면으로 들어갑니다`);
-        let title = 'WEB - create';
-        let list = template.list(filelist);
-        let html = template.HTML(title, list, `
-          <form action="/create_process" method="post">
-            <p><input type="text" name="title" placeholder="title"></p>
-            <p>
-              <textarea name="description" placeholder="description"></textarea>
-            </p>
-            <p>
-              <input type="submit">
-            </p>
-          </form>
-        `, '');
-        response.writeHead(200);
-        response.end(html);
-        console.log(`/create 화면에서 나옵니다`);
-      });
-    } else if(pathname === '/create_process'){
-      console.log(`/create_process 를 거치는 중입니다.`)
-      let body = '';
-      request.on('data', function(data){
-          body = body + data;
-      });
-      request.on('end', function(){
-          let post = qs.parse(body);
-          let title = post.title;
-          let description = post.description;
-          console.log(`${title}라는 이름의 파일을 생성할 예정입니다.`)
-          fs.writeFile(`data/${title}`, description, 'utf8', function(err){
-            console.log(`"/?id=${title} 이라는 이름의 경로로 보내버립니다.
-            `)
-            response.writeHead(302, {Location: `/?id=${title}`});
-            response.end();
-          })
-          console.log(`${title}라는 이름의 파일을 생성했습니다.`)
-      });
-    } else if(pathname === '/update'){
-      console.log(`update URL로 들어갑니다`)
-      fs.readdir('./data', function(error, filelist){
-        const filteredId = path.parse(queryData.id).base;
-        console.log(`${filteredId}라는 filteredId변수를 만들었습니다.`)
-        fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
-          let title = queryData.id;
-          let list = template.list(filelist);
-          let html = template.HTML(title, list,
-            `
-            <form action="/update_process" method="post">
-              <input type="hidden" name="id" value="${title}">
-              <p><input type="text" name="title" placeholder="title" value="${title}"></p>
+      db.query(`SELECT * FROM topic`, (err, result) => {
+        let title = `Create`;
+        let list = template.list(result);
+        let html = template.HTML(title, list,`
+            <form action="/create_process" method="post">
+              <p><input type="text" name="title" placeholder="title"></p>
               <p>
-                <textarea name="description" placeholder="description">${description}</textarea>
+                <textarea name="description" placeholder="description"></textarea>
               </p>
               <p>
                 <input type="submit">
               </p>
             </form>
-            `,
-            `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`
-          );
-          response.writeHead(200);
-          response.end(html);
-        });
+          `, '');
+
+        response.writeHead(200);
+        response.end(html);
       });
+    } else if(pathname === '/create_process'){ 
+      console.log(`/create_process 를 거치는 중입니다.`)
+      let body = '';
+
+      request.on('data', function(data){ // body라는 변수에 post로 들고온 data를 넣어줌
+          body = body + data;
+      });
+
+      request.on('end', () => {
+          let post = qs.parse(body);
+          console.log(`post 값(body를 파싱한 값)은 ${body} 입니다.`)
+          // body에 들어가있는 post 데이터를 db에 넣음
+          db.query(`
+            INSERT INTO topic(title, description, created, author_id)
+            VALUES(?, ?, NOW(), ?)`,
+            [post.title, post.description, 1],
+            (err, result) => {
+              if(err) throw err;
+              response.writeHead(302, {Location: `/?id=${result.insertId}`});
+              response.end();
+            }
+          )
+      });
+    } else if(pathname === '/update'){
+      console.log(`update URL로 들어갑니다`)
+      db.query(`SELECT * FROM topic`,(err, result) => {
+          if (err) throw err;
+          db.query(`
+            SELECT id, title, description, created, author_id
+            FROM topic WHERE id=?`,
+            [queryData.id],
+            (err2,result2) => {
+              if(err2) throw err2;
+              let id = result2[0].id;
+              let title = result2[0].title;
+              let list = template.list(result);
+              let description = result2[0].description;
+              let html = template.HTML(title, list,
+                `
+                <form action="/update_process" method="post">
+                  <input type="hidden" name="id" value="${id}">
+                  <p><input type="text" name="title" placeholder="title" value="${title}"></p>
+                  <p>
+                    <textarea name="description" placeholder="description">${description}</textarea>
+                  </p>
+                  <p>
+                    <input type="submit">
+                  </p>
+                </form>
+                `,
+                `<a href="/create">create</a> <a href="/update?id=${id}">update</a>`)
+              response.writeHead(200);
+              response.end(html);
+            })
+        }
+      )
     } else if(pathname === '/update_process'){
       console.log(`update process 진행중입니다.`)
       let body = '';
+
       request.on('data', function(data){
-          console.log(`post 요청으로 들어온 데이터는 ${JSON.stringify(data)}입니다.
-          `)
-          body = body + data;
+        body = body + data;
       });
-      request.on('end', function(){
-          let post = qs.parse(body);
-          console.log(`post 데이터를 파싱한 결과는 ${JSON.stringify(post)} 입니다.
-          `)
-          let id = post.id;
-          let title = post.title;
-          let description = post.description;
-          console.log(`파일 이름을 ${id}에서 ${title}로 바꾸고 있습니다.`)
-          fs.rename(`data/${id}`, `data/${title}`, function(error){
-            console.log(`${title}이름의 파일을 만들고 있습니다`)
-            fs.writeFile(`data/${title}`, description, 'utf8', function(err){
-              console.log(`"/?id=${title}" 주소로 보내버립니다.
-              `)
-              response.writeHead(302, {Location: `/?id=${title}`});
-              response.end();
-            })
-          });
+
+      request.on('end', () => {
+        let post = qs.parse(body);
+        console.log(`post 값(body를 파싱한 값)은 ${body} 입니다.`)
+        db.query(`
+          UPDATE topic 
+          SET title=?, description=?, author_id=1 WHERE id=?`,
+          [post.title, post.description, post.id],
+          (err, result) => {
+            if(err) throw err;
+            response.writeHead(302, {Location: `/?id=${post.id}`});
+            response.end();
+          }
+        )
       });
+
     } else if(pathname === '/delete_process'){
       let body = '';
       request.on('data', function(data){
