@@ -133,7 +133,7 @@ console.log(`----------------------시이이자아아아악---------------------
                     <textarea name="description" placeholder="description">${description}</textarea>
                   </p>
                   <p>
-                    <input type="submit">
+                    <input type="submit" value = "delete">
                   </p>
                 </form>
                 `,
@@ -173,9 +173,8 @@ console.log(`----------------------시이이자아아아악---------------------
       });
       request.on('end', function(){
           let post = qs.parse(body);
-          let id = post.id;
-          let filteredId = path.parse(id).base;
-          fs.unlink(`data/${filteredId}`, function(error){
+          console.log(`post 타입으로 들어온 데이터는 ${JSON.stringify(post)}입니다.`);
+          db.query(`DELETE FROM topic WHERE id=?`,[post.id],(err, result) => {
             response.writeHead(302, {Location: `/`});
             response.end();
           })
