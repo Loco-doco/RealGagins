@@ -43,7 +43,11 @@ console.log(`----------------------시이이자아아아악---------------------
         db.query(`SELECT * FROM topic`, (err,filelist) => {
           if (err) throw err;
           db.query(`
-            SELECT id,title,description FROM topic WHERE id=?`,
+            SELECT topic.id,title,description,author_id,name,profile
+            FROM topic 
+            LEFT JOIN author
+            ON author.id = topic.author_id
+            WHERE topic.id=?`,
             [queryData.id],
             (err, result) => {
               if (err) throw err;
@@ -53,7 +57,8 @@ console.log(`----------------------시이이자아아아악---------------------
               let description = result[0].description;
               let list = template.list(filelist);
               let html = template.HTML(title, list,
-                `<h2>${title}</h2>${description}`,
+                `<h2>${title}</h2>${description}
+                by ${result[0].name}`,
                 ` <a href="/create">create</a>
                   <a href="/update?id=${queryData.id}">update</a>
                   <form action="delete_process" method="post">
@@ -69,23 +74,29 @@ console.log(`----------------------시이이자아아아악---------------------
         });
       }
     } else if(pathname === '/create'){
-      db.query(`SELECT * FROM topic`, (err, result) => {
-        let title = `Create`;
-        let list = template.list(result);
-        let html = template.HTML(title, list,`
-            <form action="/create_process" method="post">
-              <p><input type="text" name="title" placeholder="title"></p>
-              <p>
-                <textarea name="description" placeholder="description"></textarea>
-              </p>
-              <p>
-                <input type="submit">
-              </p>
-            </form>
-          `, '');
+      db.query(`SELECT * FROM author`, (err2, author) => {
+        db.query(`SELECT * FROM topic`, (err, result) => {
+          let title = `Create`;
+          let list = template.list(result);
+          let authors = template.authorSelect(author);
+          let html = template.HTML(title, list,`
+              <form action="/create_process" method="post">
+                <p><input type="text" name="title" placeholder="title"></p>
+                <p>
+                  ${authors}
+                </p>
+                <p>
+                  <textarea name="description" placeholder="description"></textarea>
+                </p>
+                <p>
+                  <input type="submit">
+                </p>
+              </form>
+            `, '');
 
-        response.writeHead(200);
-        response.end(html);
+          response.writeHead(200);
+          response.end(html);
+        })
       });
     } else if(pathname === '/create_process'){ 
       console.log(`/create_process 를 거치는 중입니다.`)
@@ -102,7 +113,7 @@ console.log(`----------------------시이이자아아아악---------------------
           db.query(`
             INSERT INTO topic(title, description, created, author_id)
             VALUES(?, ?, NOW(), ?)`,
-            [post.title, post.description, 1],
+            [post.title, post.description, post.author_id],
             (err, result) => {
               if(err) throw err;
               response.writeHead(302, {Location: `/?id=${result.insertId}`});
@@ -112,37 +123,43 @@ console.log(`----------------------시이이자아아아악---------------------
       });
     } else if(pathname === '/update'){
       console.log(`update URL로 들어갑니다`)
-      db.query(`SELECT * FROM topic`,(err, result) => {
-          if (err) throw err;
-          db.query(`
-            SELECT id, title, description, created, author_id
-            FROM topic WHERE id=?`,
-            [queryData.id],
-            (err2,result2) => {
-              if(err2) throw err2;
-              let id = result2[0].id;
-              let title = result2[0].title;
-              let list = template.list(result);
-              let description = result2[0].description;
-              let html = template.HTML(title, list,
-                `
-                <form action="/update_process" method="post">
-                  <input type="hidden" name="id" value="${id}">
-                  <p><input type="text" name="title" placeholder="title" value="${title}"></p>
-                  <p>
-                    <textarea name="description" placeholder="description">${description}</textarea>
-                  </p>
-                  <p>
-                    <input type="submit" value = "delete">
-                  </p>
-                </form>
-                `,
-                `<a href="/create">create</a> <a href="/update?id=${id}">update</a>`)
-              response.writeHead(200);
-              response.end(html);
-            })
-        }
-      )
+      db.query(`SELECT * FROM author`, (err3, author) => {
+        db.query(`SELECT * FROM topic`,(err, topic) => {
+            if (err) throw err;
+            db.query(`
+              SELECT id, title, description, created, author_id
+              FROM topic WHERE id=?`,
+              [queryData.id],
+              (err2,topicSelected) => {
+                if(err2) throw err2;
+                let id = topicSelected[0].id;
+                let title = topicSelected[0].title;
+                let pre_author = topicSelected[0].author_id;
+                let authorlist = template.authorSelect(author, pre_author);
+                let list = template.list(topic);
+                let description = topicSelected[0].description;
+                let html = template.HTML(title, list,
+                  `
+                  <form action="/update_process" method="post">
+                    <input type="hidden" name="id" value="${id}">
+                    <p><input type="text" name="title" placeholder="title" value="${title}"></p>
+                    <p>
+                      ${authorlist}
+                    </p>
+                    <p>
+                      <textarea name="description" placeholder="description">${description}</textarea>
+                    </p>
+                    <p>
+                      <input type="submit" value = "delete">
+                    </p>
+                  </form>
+                  `,
+                  `<a href="/create">create</a> <a href="/update?id=${id}">update</a>`)
+                response.writeHead(200);
+                response.end(html);
+              })
+        })
+      })
     } else if(pathname === '/update_process'){
       console.log(`update process 진행중입니다.`)
       let body = '';
@@ -156,8 +173,8 @@ console.log(`----------------------시이이자아아아악---------------------
         console.log(`post 값(body를 파싱한 값)은 ${body} 입니다.`)
         db.query(`
           UPDATE topic 
-          SET title=?, description=?, author_id=1 WHERE id=?`,
-          [post.title, post.description, post.id],
+          SET title=?, description=?, author_id=? WHERE id=?`,
+          [post.title, post.description, post.author_id, post.id],
           (err, result) => {
             if(err) throw err;
             response.writeHead(302, {Location: `/?id=${post.id}`});
